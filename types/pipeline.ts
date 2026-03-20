@@ -65,6 +65,9 @@ export interface ProductionShot {
 export interface ResearchRequest {
   topic: string;
   researchText?: string;
+  primarySource?: string;
+  primarySourceName?: string;
+  secondarySources?: string;
 }
 
 export interface AnalysisRequest {
@@ -103,6 +106,8 @@ export interface ProductionGuideRequest {
 export type WizardAction =
   | { type: 'SET_TOPIC'; payload: string }
   | { type: 'SET_RESEARCH_INPUT'; payload: string }
+  | { type: 'SET_PRIMARY_SOURCE'; payload: { name: string; text: string } }
+  | { type: 'SET_SECONDARY_SOURCES'; payload: string }
   | { type: 'SET_RESEARCH_EXTRACTION'; payload: string }
   | { type: 'SET_ANGLE_PROPOSALS'; payload: AngleProposal[] }
   | { type: 'SELECT_ANGLE'; payload: AngleProposal }
@@ -122,6 +127,8 @@ export interface WizardState {
   currentStep: Step;
   topic: string;
   researchInput: string;
+  primarySource?: { name: string; text: string } | null;
+  secondarySources?: string | null;
   researchExtraction: string | null;
   angleProposals: AngleProposal[] | null;
   selectedAngle: AngleProposal | null;

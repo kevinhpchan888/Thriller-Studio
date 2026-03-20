@@ -16,6 +16,8 @@ const initialState: WizardState = {
   currentStep: 'upload',
   topic: '',
   researchInput: '',
+  primarySource: null,
+  secondarySources: null,
   researchExtraction: null,
   angleProposals: null,
   selectedAngle: null,
@@ -34,6 +36,10 @@ function reducer(state: WizardState, action: WizardAction): WizardState {
       return { ...state, topic: action.payload };
     case 'SET_RESEARCH_INPUT':
       return { ...state, researchInput: action.payload };
+    case 'SET_PRIMARY_SOURCE':
+      return { ...state, primarySource: action.payload };
+    case 'SET_SECONDARY_SOURCES':
+      return { ...state, secondarySources: action.payload };
     case 'SET_RESEARCH_EXTRACTION':
       return { ...state, researchExtraction: action.payload };
     case 'SET_ANGLE_PROPOSALS':
@@ -173,6 +179,8 @@ export function WizardShell() {
         {state.currentStep === 'research' && (
           <ResearchStep
             topic={state.topic} researchInput={state.researchInput}
+            primarySource={state.primarySource}
+            secondarySources={state.secondarySources}
             researchExtraction={state.researchExtraction} dispatch={dispatch}
           />
         )}

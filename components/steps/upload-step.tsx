@@ -8,6 +8,7 @@ interface UploadedFile {
   size: number;
   text: string;
   error?: string;
+  isPrimary?: boolean;
 }
 
 export function UploadStep({
@@ -28,15 +29,41 @@ export function UploadStep({
 
   const canProceed = localTopic.trim().length > 3;
 
+  function togglePrimary(index: number) {
+    setUploadedFiles(prev => prev.map((f, i) => ({
+      ...f,
+      isPrimary: i === index ? !f.isPrimary : false,
+    })));
+  }
+
   function handleStart() {
-    // Combine pasted text + all uploaded file texts
+    const validFiles = uploadedFiles.filter(f => f.text && !f.error);
+    const primaryFile = validFiles.find(f => f.isPrimary);
+    const secondaryFiles = validFiles.filter(f => !f.isPrimary);
+
+    // Build combined research text for downstream phases (analysis, blueprint, etc.)
     const allResearch = [
+      ...(primaryFile ? [`--- PRIMARY: ${primaryFile.name} ---\n${primaryFile.text}`] : []),
+      ...secondaryFiles.map(f => `--- ${f.name} ---\n${f.text}`),
       localResearch.trim(),
-      ...uploadedFiles.filter(f => f.text && !f.error).map(f => `--- ${f.name} ---\n${f.text}`),
     ].filter(Boolean).join('\n\n');
 
     dispatch({ type: 'SET_TOPIC', payload: localTopic.trim() });
     dispatch({ type: 'SET_RESEARCH_INPUT', payload: allResearch });
+
+    // Store primary/secondary split for the research API
+    if (primaryFile) {
+      dispatch({
+        type: 'SET_PRIMARY_SOURCE',
+        payload: { name: primaryFile.name, text: primaryFile.text },
+      });
+      const secondaryText = [
+        ...secondaryFiles.map(f => `--- ${f.name} ---\n${f.text}`),
+        localResearch.trim(),
+      ].filter(Boolean).join('\n\n');
+      dispatch({ type: 'SET_SECONDARY_SOURCES', payload: secondaryText });
+    }
+
     dispatch({ type: 'GO_TO_STEP', payload: 'research' });
   }
 
@@ -192,6 +219,11 @@ export function UploadStep({
               {totalChars.toLocaleString()} chars extracted
             </span>
           </div>
+          {uploadedFiles.filter(f => f.text && !f.error).length > 1 && (
+            <p className="text-xs text-text-muted">
+              Click the star to set a <strong className="text-accent">primary source</strong> — the core book/text the story is built around. Other files become supporting references.
+            </p>
+          )}
           <div className="space-y-1.5">
             {uploadedFiles.map((file, i) => (
               <div
@@ -199,14 +231,35 @@ export function UploadStep({
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg border ${
                   file.error
                     ? 'bg-accent-dim/10 border-accent/30'
+                    : file.isPrimary
+                    ? 'bg-accent/10 border-accent/50 ring-1 ring-accent/30'
                     : 'bg-surface-raised border-border'
                 }`}
               >
+                {/* Primary toggle star */}
+                {file.text && !file.error && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); togglePrimary(i); }}
+                    className={`text-lg transition-all hover:scale-110 ${
+                      file.isPrimary
+                        ? 'text-accent drop-shadow-[0_0_4px_rgba(230,57,70,0.5)]'
+                        : 'text-text-muted/40 hover:text-accent/60'
+                    }`}
+                    title={file.isPrimary ? 'Primary source (click to unset)' : 'Set as primary source'}
+                  >
+                    {file.isPrimary ? '★' : '☆'}
+                  </button>
+                )}
                 <span className="text-sm">
                   {file.name.endsWith('.epub') ? '📖' : '📄'}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm text-text-primary truncate">{file.name}</div>
+                  <div className="text-sm text-text-primary truncate">
+                    {file.name}
+                    {file.isPrimary && (
+                      <span className="ml-2 text-xs font-medium text-accent">PRIMARY</span>
+                    )}
+                  </div>
                   <div className="text-xs text-text-muted">
                     {formatSize(file.size)}
                     {file.text && !file.error && ` · ${file.text.length.toLocaleString()} chars`}

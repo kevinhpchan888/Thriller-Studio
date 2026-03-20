@@ -6,11 +6,15 @@ import type { WizardAction } from '@/types/pipeline';
 export function ResearchStep({
   topic,
   researchInput,
+  primarySource,
+  secondarySources,
   researchExtraction,
   dispatch,
 }: {
   topic: string;
   researchInput: string;
+  primarySource?: { name: string; text: string } | null;
+  secondarySources?: string | null;
   researchExtraction: string | null;
   dispatch: React.Dispatch<WizardAction>;
 }) {
@@ -31,7 +35,13 @@ export function ResearchStep({
         const res = await fetch('/api/research', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ topic, researchText: researchInput || undefined }),
+          body: JSON.stringify({
+            topic,
+            researchText: researchInput || undefined,
+            primarySource: primarySource || undefined,
+            primarySourceName: primarySource?.name || undefined,
+            secondarySources: secondarySources || undefined,
+          }),
         });
 
         if (!res.ok) throw new Error(`API error: ${res.status}`);
@@ -55,7 +65,7 @@ export function ResearchStep({
         dispatch({ type: 'SET_STREAMING', payload: false });
       }
     })();
-  }, [topic, researchInput, researchExtraction, dispatch]);
+  }, [topic, researchInput, primarySource, secondarySources, researchExtraction, dispatch]);
 
   useEffect(() => {
     if (contentRef.current) {
