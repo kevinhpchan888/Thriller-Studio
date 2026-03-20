@@ -1,12 +1,24 @@
-import type Anthropic from '@anthropic-ai/sdk';
+import Anthropic from '@anthropic-ai/sdk';
 
-export function anthropicStreamToResponse(
-  stream: ReturnType<Anthropic['messages']['stream']>
+export function createStreamingResponse(
+  client: Anthropic,
+  params: {
+    model: string;
+    max_tokens: number;
+    system: string;
+    messages: Anthropic.MessageCreateParams['messages'];
+  }
 ): Response {
   const encoder = new TextEncoder();
+
   const readable = new ReadableStream({
     async start(controller) {
       try {
+        const stream = await client.messages.create({
+          ...params,
+          stream: true,
+        });
+
         for await (const event of stream) {
           if (
             event.type === 'content_block_delta' &&
@@ -17,7 +29,10 @@ export function anthropicStreamToResponse(
         }
         controller.close();
       } catch (err) {
-        controller.error(err);
+        // Send error as text so client can display it
+        const errMsg = err instanceof Error ? err.message : String(err);
+        controller.enqueue(encoder.encode(`\n\n[ERROR: ${errMsg}]`));
+        controller.close();
       }
     },
   });
@@ -26,6 +41,7 @@ export function anthropicStreamToResponse(
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'no-cache',
+      'Transfer-Encoding': 'chunked',
     },
   });
 }

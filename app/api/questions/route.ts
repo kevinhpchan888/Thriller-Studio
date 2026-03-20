@@ -14,8 +14,11 @@ export async function POST(request: Request) {
       messages,
     });
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : '';
-    const questions = JSON.parse(text);
+    let text = response.content[0].type === 'text' ? response.content[0].text : '';
+    // Strip markdown code fences if present
+    const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fenceMatch) text = fenceMatch[1];
+    const questions = JSON.parse(text.trim());
     return Response.json(questions);
   } catch (err) {
     return Response.json({ error: String(err) }, { status: 500 });
