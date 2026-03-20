@@ -1,4 +1,4 @@
-import { getClient } from '@/lib/anthropic';
+import { getClient, AI_MODEL } from '@/lib/ai-client';
 import { buildQuestionsPrompt } from '@/lib/prompts/questions';
 
 export async function POST(request: Request) {
@@ -7,14 +7,16 @@ export async function POST(request: Request) {
     const { system, messages } = buildQuestionsPrompt(body);
     const client = getClient();
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+    const response = await client.chat.completions.create({
+      model: AI_MODEL,
       max_tokens: 2048,
-      system,
-      messages,
+      messages: [
+        { role: 'system', content: system },
+        ...messages,
+      ],
     });
 
-    let text = response.content[0].type === 'text' ? response.content[0].text : '';
+    let text = response.choices[0].message.content || '';
     // Strip markdown code fences if present
     const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (fenceMatch) text = fenceMatch[1];

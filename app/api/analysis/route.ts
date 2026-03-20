@@ -1,5 +1,5 @@
 import { createStreamingResponse } from '@/lib/stream-helpers';
-import { getClient } from '@/lib/anthropic';
+import { getClient, AI_MODEL } from '@/lib/ai-client';
 import { buildAnalysisPrompt } from '@/lib/prompts/analysis';
 
 export async function POST(request: Request) {
@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     const client = getClient();
 
     return createStreamingResponse(client, {
-      model: 'claude-sonnet-4-5-20250929',
+      model: AI_MODEL,
       max_tokens: 4096,
       system,
       messages,

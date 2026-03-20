@@ -1,7 +1,7 @@
 import { createStreamingResponse } from '@/lib/stream-helpers';
-import { getClient } from '@/lib/anthropic';
+import { getClient, AI_MODEL } from '@/lib/ai-client';
 import { buildResearchPrompt } from '@/lib/prompts/research';
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 
 // ~150K chars ≈ ~37K tokens, well under the 200K token limit with system prompt overhead
 const MAX_CHARS_PER_CHUNK = 150000;
@@ -31,7 +31,7 @@ function splitText(text: string, maxChars: number): string[] {
 }
 
 async function extractChunk(
-  client: Anthropic,
+  client: OpenAI,
   system: string,
   topic: string,
   chunk: string,
@@ -42,13 +42,15 @@ async function extractChunk(
     ? `Topic: ${topic}\n\n[Research Material — Part ${chunkIndex + 1} of ${totalChunks}]\n\n${chunk}`
     : `Topic: ${topic}\n\nResearch Material:\n${chunk}`;
 
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-5-20250929',
+  const response = await client.chat.completions.create({
+    model: AI_MODEL,
     max_tokens: 4096,
-    system,
-    messages: [{ role: 'user', content: label }],
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user', content: label },
+    ],
   });
-  return response.content[0].type === 'text' ? response.content[0].text : '';
+  return response.choices[0].message.content || '';
 }
 
 export async function POST(request: Request) {
@@ -67,7 +69,7 @@ export async function POST(request: Request) {
     if (totalText.length <= MAX_CHARS_PER_CHUNK) {
       const { system, messages } = buildResearchPrompt(body);
       return createStreamingResponse(client, {
-        model: 'claude-sonnet-4-5-20250929',
+        model: AI_MODEL,
         max_tokens: 4096,
         system,
         messages,
@@ -153,11 +155,11 @@ CRITICAL: The PRIMARY source is the core narrative backbone. Its characters, eve
 Keep the same heading structure. Combine entries, remove duplicates, and note where secondary sources add depth to the primary narrative. Be exhaustive.`
             : `You are a thriller research analyst. You have been given multiple partial extractions from a large body of research material. Merge and deduplicate them into a single comprehensive analysis. Keep the same heading structure. Combine entries, remove duplicates, and ensure nothing is lost. Be exhaustive.`;
 
-          const mergeStream = await client.messages.create({
-            model: 'claude-sonnet-4-5-20250929',
+          const mergeStream = await client.chat.completions.create({
+            model: AI_MODEL,
             max_tokens: 6000,
-            system: mergeSystem,
             messages: [
+              { role: 'system', content: mergeSystem },
               {
                 role: 'user',
                 content: `Topic: ${body.topic}\n\nHere are the partial extractions to merge:\n\n${extractions.map(e => `=== ${e.label} ===\n${e.text}`).join('\n\n')}`,
@@ -166,12 +168,10 @@ Keep the same heading structure. Combine entries, remove duplicates, and note wh
             stream: true,
           });
 
-          for await (const event of mergeStream) {
-            if (
-              event.type === 'content_block_delta' &&
-              event.delta.type === 'text_delta'
-            ) {
-              controller.enqueue(encoder.encode(event.delta.text));
+          for await (const chunk of mergeStream) {
+            const text = chunk.choices[0]?.delta?.content;
+            if (text) {
+              controller.enqueue(encoder.encode(text));
             }
           }
           controller.close();
