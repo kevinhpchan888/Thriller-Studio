@@ -580,9 +580,15 @@ export function VisualArchitectStep({
             </button>
             <button
               onClick={() => setShowExport(true)}
+              className="px-4 py-2 bg-surface-raised border border-border rounded-lg text-sm text-text-secondary hover:text-text-primary hover:border-accent/40 transition-all flex items-center gap-2"
+            >
+              Export to ShotBoard .xlsx
+            </button>
+            <button
+              onClick={() => dispatch({ type: 'GO_TO_STEP', payload: 'shotboard' })}
               className="px-4 py-2 btn-primary text-surface rounded-lg text-sm font-semibold flex items-center gap-2"
             >
-              🎬 Export to ShotBoard
+              Proceed to ShotBoard →
             </button>
           </div>
         </>
