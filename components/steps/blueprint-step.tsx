@@ -103,7 +103,7 @@ export function BlueprintStep({
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-4">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">Story Blueprint</h2>
         {loading && (
