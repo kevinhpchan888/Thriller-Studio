@@ -1,4 +1,4 @@
-export type Step = 'upload' | 'research' | 'analysis' | 'questions' | 'blueprint' | 'generate' | 'visuals';
+export type Step = 'upload' | 'research' | 'analysis' | 'questions' | 'blueprint' | 'generate' | 'visuals' | 'shotboard';
 
 export interface AngleProposal {
   title: string;
@@ -188,6 +188,47 @@ export interface VisualRefreshRequest {
   userPrompt?: string;
 }
 
+// ─── ShotBoard Types ────────────────────────────────────────────────
+
+export type ProductionStatus = 'pending' | 'previewing' | 'preview-ready' | 'approved' | 'rendering' | 'done' | 'failed' | 'revision';
+export type ShotAction = 'generate-preview' | 'full-render' | 'fix-faces' | 'upscale' | 'reconceive';
+
+export interface ShotVersion {
+  id: string;
+  imageUrl: string;       // relative path in production/output/
+  timestamp: string;
+  action: ShotAction;
+  prompt?: string;        // user correction prompt that produced this version
+  status: 'success' | 'failed';
+  failureReason?: string;
+  metadata?: {
+    checkpoint?: string;
+    steps?: number;
+    seed?: number;
+    duration?: number;    // generation time in seconds
+  };
+}
+
+export interface ShotBoardEntry {
+  shotIndex: number;
+  shot: ProductionShot;
+  concept: VisualConcept;
+  status: ProductionStatus;
+  versions: ShotVersion[];
+  activeVersionIndex: number;
+  correctionPrompt: string;
+}
+
+export interface ShotBoardExecuteRequest {
+  action: ShotAction;
+  shotIndex: number;
+  concept: VisualConcept;
+  shot: ProductionShot;
+  projectSlug: string;
+  correctionPrompt?: string;
+  sourceImagePath?: string;  // for fix-faces / upscale — points to existing image
+}
+
 // Wizard state
 export type WizardAction =
   | { type: 'SET_TOPIC'; payload: string }
@@ -206,6 +247,8 @@ export type WizardAction =
   | { type: 'UPDATE_SHOT'; payload: { index: number; shot: ProductionShot } }
   | { type: 'SET_VISUAL_CONCEPTS'; payload: VisualConcept[] }
   | { type: 'UPDATE_VISUAL_CONCEPT'; payload: { index: number; concept: VisualConcept } }
+  | { type: 'SET_SHOTBOARD_ENTRIES'; payload: ShotBoardEntry[] }
+  | { type: 'UPDATE_SHOTBOARD_ENTRY'; payload: { index: number; entry: ShotBoardEntry } }
   | { type: 'GO_TO_STEP'; payload: Step }
   | { type: 'SET_STREAMING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
@@ -226,6 +269,7 @@ export interface WizardState {
   screenplay: string | null;
   productionShots: ProductionShot[] | null;
   visualConcepts: VisualConcept[] | null;
+  shotboardEntries: ShotBoardEntry[] | null;
   isStreaming: boolean;
   error: string | null;
 }

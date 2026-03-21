@@ -10,10 +10,11 @@ const STEPS: { key: Step; label: string }[] = [
   { key: 'blueprint', label: 'Blueprint' },
   { key: 'generate', label: 'Generate' },
   { key: 'visuals', label: 'Visuals' },
+  { key: 'shotboard', label: 'ShotBoard' },
 ];
 
 const STEP_INDEX: Record<Step, number> = {
-  upload: 0, research: 1, analysis: 2, questions: 3, blueprint: 4, generate: 5, visuals: 6,
+  upload: 0, research: 1, analysis: 2, questions: 3, blueprint: 4, generate: 5, visuals: 6, shotboard: 7,
 };
 
 export function StepIndicator({

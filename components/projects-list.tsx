@@ -13,6 +13,7 @@ const STEP_LABELS: Record<Step, string> = {
   blueprint: 'Blueprint',
   generate: 'Generate',
   visuals: 'Visuals',
+  shotboard: 'ShotBoard',
 };
 
 const STEP_PROGRESS: Record<Step, number> = {
@@ -23,6 +24,7 @@ const STEP_PROGRESS: Record<Step, number> = {
   blueprint: 4,
   generate: 5,
   visuals: 6,
+  shotboard: 7,
 };
 
 export function ProjectsList({
@@ -121,7 +123,7 @@ export function ProjectsList({
 
                   {/* Progress bar */}
                   <div className="hidden sm:flex items-center gap-1 min-w-[100px]">
-                    {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                    {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
                       <div
                         key={i}
                         className={`h-1.5 flex-1 rounded-full ${

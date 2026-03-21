@@ -1,5 +1,7 @@
 .env.local
 .next
 node_modules
+.claude/settings.local.json
 
 .vercel
+production/
