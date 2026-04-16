@@ -1,12 +1,13 @@
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
+import { AI_MODEL } from './ai-client';
 
 export function createStreamingResponse(
-  client: Anthropic,
+  client: OpenAI,
   params: {
-    model: string;
+    model?: string;
     max_tokens: number;
     system: string;
-    messages: Anthropic.MessageCreateParams['messages'];
+    messages: Array<{ role: 'user' | 'assistant'; content: string }>;
   }
 ): Response {
   const encoder = new TextEncoder();
@@ -14,22 +15,24 @@ export function createStreamingResponse(
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        const stream = await client.messages.create({
-          ...params,
+        const stream = await client.chat.completions.create({
+          model: params.model || AI_MODEL,
+          max_tokens: params.max_tokens,
+          messages: [
+            { role: 'system' as const, content: params.system },
+            ...params.messages,
+          ],
           stream: true,
         });
 
-        for await (const event of stream) {
-          if (
-            event.type === 'content_block_delta' &&
-            event.delta.type === 'text_delta'
-          ) {
-            controller.enqueue(encoder.encode(event.delta.text));
+        for await (const chunk of stream) {
+          const text = chunk.choices[0]?.delta?.content;
+          if (text) {
+            controller.enqueue(encoder.encode(text));
           }
         }
         controller.close();
       } catch (err) {
-        // Send error as text so client can display it
         const errMsg = err instanceof Error ? err.message : String(err);
         controller.enqueue(encoder.encode(`\n\n[ERROR: ${errMsg}]`));
         controller.close();

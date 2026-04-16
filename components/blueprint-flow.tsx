@@ -104,7 +104,7 @@ function ActCard({
 
   return (
     <div
-      className={`flex-shrink-0 w-64 sm:w-72 bg-surface-raised border-2 ${actColors[(act.actNumber - 1) % 5]} rounded-lg overflow-hidden`}
+      className={`flex-shrink-0 w-60 sm:w-64 lg:w-72 bg-surface-raised border-2 ${actColors[(act.actNumber - 1) % 5]} rounded-lg overflow-hidden`}
     >
       <div className="px-4 py-3 border-b border-border">
         <div className="flex items-center justify-between">
@@ -166,7 +166,7 @@ export function BlueprintFlow({
       </div>
 
       {/* Horizontal scrollable timeline */}
-      <div className="overflow-x-auto pb-4">
+      <div className="overflow-x-auto pb-4 -mx-4 px-4">
         <div className="flex gap-3 min-w-max">
           {blueprint.acts.map((act, i) => (
             <div key={act.actNumber} className="flex items-center gap-3">

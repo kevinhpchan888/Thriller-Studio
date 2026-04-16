@@ -11,6 +11,9 @@ import { AnalysisStep } from './steps/analysis-step';
 import { QuestionsStep } from './steps/questions-step';
 import { BlueprintStep } from './steps/blueprint-step';
 import { GenerateStep } from './steps/generate-step';
+import { VisualArchitectStep } from './steps/visual-architect-step';
+import { ShotBoardStep } from './steps/shotboard-step';
+import { ThemeToggle } from './theme-provider';
 
 const initialState: WizardState = {
   currentStep: 'upload',
@@ -26,6 +29,8 @@ const initialState: WizardState = {
   blueprint: null,
   screenplay: null,
   productionShots: null,
+  visualConcepts: null,
+  shotboardEntries: null,
   isStreaming: false,
   error: null,
 };
@@ -65,6 +70,20 @@ function reducer(state: WizardState, action: WizardAction): WizardState {
       const shots = state.productionShots ? [...state.productionShots] : [];
       shots[action.payload.index] = action.payload.shot;
       return { ...state, productionShots: shots };
+    }
+    case 'SET_VISUAL_CONCEPTS':
+      return { ...state, visualConcepts: action.payload };
+    case 'UPDATE_VISUAL_CONCEPT': {
+      const vc = state.visualConcepts ? [...state.visualConcepts] : [];
+      vc[action.payload.index] = action.payload.concept;
+      return { ...state, visualConcepts: vc };
+    }
+    case 'SET_SHOTBOARD_ENTRIES':
+      return { ...state, shotboardEntries: action.payload };
+    case 'UPDATE_SHOTBOARD_ENTRY': {
+      const sbe = state.shotboardEntries ? [...state.shotboardEntries] : [];
+      sbe[action.payload.index] = action.payload.entry;
+      return { ...state, shotboardEntries: sbe };
     }
     case 'GO_TO_STEP':
       return { ...state, currentStep: action.payload, error: null };
@@ -156,6 +175,7 @@ export function WizardShell() {
             >
               Save Project
             </button>
+            <ThemeToggle />
           </div>
         </div>
 
@@ -214,6 +234,27 @@ export function WizardShell() {
             selectedAngle={state.selectedAngle} answers={state.answers}
             blueprint={state.blueprint} screenplay={state.screenplay}
             productionShots={state.productionShots} dispatch={dispatch}
+          />
+        )}
+
+        {state.currentStep === 'visuals' && state.blueprint && state.productionShots && (
+          <VisualArchitectStep
+            topic={state.topic}
+            blueprint={state.blueprint}
+            productionShots={state.productionShots}
+            visualConcepts={state.visualConcepts}
+            dispatch={dispatch}
+          />
+        )}
+
+        {state.currentStep === 'shotboard' && state.blueprint && state.productionShots && state.visualConcepts && (
+          <ShotBoardStep
+            topic={state.topic}
+            blueprint={state.blueprint}
+            productionShots={state.productionShots}
+            visualConcepts={state.visualConcepts}
+            shotboardEntries={state.shotboardEntries}
+            dispatch={dispatch}
           />
         )}
       </div>

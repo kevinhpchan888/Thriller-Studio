@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { listProjects, deleteProject, type SavedProject } from '@/lib/projects';
 import type { Step } from '@/types/pipeline';
+import { ThemeToggle } from './theme-provider';
 
 const STEP_LABELS: Record<Step, string> = {
   upload: 'Upload',
@@ -11,6 +12,8 @@ const STEP_LABELS: Record<Step, string> = {
   questions: 'Questions',
   blueprint: 'Blueprint',
   generate: 'Generate',
+  visuals: 'Visuals',
+  shotboard: 'ShotBoard',
 };
 
 const STEP_PROGRESS: Record<Step, number> = {
@@ -20,6 +23,8 @@ const STEP_PROGRESS: Record<Step, number> = {
   questions: 3,
   blueprint: 4,
   generate: 5,
+  visuals: 6,
+  shotboard: 7,
 };
 
 export function ProjectsList({
@@ -62,12 +67,15 @@ export function ProjectsList({
           </h1>
           <p className="text-text-secondary text-sm mt-1">Your screenplay projects</p>
         </div>
-        <button
-          onClick={onNewProject}
-          className="px-5 py-2.5 btn-primary text-surface font-semibold rounded-lg transition-colors text-sm"
-        >
-          + New Project
-        </button>
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <button
+            onClick={onNewProject}
+            className="px-5 py-2.5 btn-primary text-surface font-semibold rounded-lg transition-colors text-sm"
+          >
+            + New Project
+          </button>
+        </div>
       </div>
 
       {projects.length === 0 ? (
@@ -115,7 +123,7 @@ export function ProjectsList({
 
                   {/* Progress bar */}
                   <div className="hidden sm:flex items-center gap-1 min-w-[100px]">
-                    {[0, 1, 2, 3, 4, 5].map((i) => (
+                    {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
                       <div
                         key={i}
                         className={`h-1.5 flex-1 rounded-full ${
